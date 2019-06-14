@@ -3,6 +3,7 @@
     <div class="container">
       <div class="row">
         <div class="col-md-6">
+          <h1>Existe la imagen?</h1>
           <b-form @submit="onSubmit" v-if="show">
             <b-form-group>
               <b-form-input
@@ -17,6 +18,7 @@
           </b-form>
         </div>
         <div class="col-md-6">
+          <h1>Vamos a buscarla</h1>
           <b-form @submit="onImage" v-if="show">
             <b-form-group>
               <b-form-input
@@ -29,11 +31,13 @@
             </b-form-group>
             <b-button type="submit" variant="primary">Submit</b-button>
           </b-form>
-          <div class="col-md-6 align-center">
-            <img :src="'http://localhost/TallerDistribuido/public'+image" alt="" class="img-fluid">
+          <br>
+          <div class="align-center" v-show="picture">
+            <img :src="'http://tallersd.test'+image" alt="" class="img-fluid" width="300" height="500">
           </div>
         </div>
         <div class="col-md-12">
+          <h1>Inserta tu imagen</h1>
           <b-form @submit="storeImage" v-if="show">
           <b-form-group>
               <b-form-input
@@ -58,6 +62,7 @@
         </div>
       </div>
     </div>
+    <notifications group="foo" position="top center" />
   </div>
 </template>
 
@@ -79,16 +84,23 @@ export default {
       },
       image: '',
       file: null,
-      show: true
+      show: true,
+      picture: false
     }
   },
   methods: {
     onSubmit (evt) {
+      let app = this
       evt.preventDefault()
-      axios.get('http://localhost/TallerDistribuido/public/api/v1/image/search/' + this.form1.search)
+      axios.get('http://tallersd.test/api/v1/image/search/' + app.form1.search)
         .then(function (resp) {
-          alert(resp.data)
-          this.form1.search = ''
+          app.$notify({
+            group: 'foo',
+            title: 'Alerta',
+            text: resp.data,
+            type: 'success'
+          })
+          app.form1.search = ''
         }).catch(function (error) {
           console.log('an error occured ' + error)
         })
@@ -96,8 +108,15 @@ export default {
     onImage (evt) {
       let app = this
       evt.preventDefault()
-      axios.get('http://localhost/TallerDistribuido/public/api/v1/image/get/' + this.form2.search)
+      axios.get('http://tallersd.test/api/v1/image/get/' + app.form2.search)
         .then(function (resp) {
+          app.$notify({
+            group: 'foo',
+            title: 'Alerta',
+            text: 'Imagen cargada desde el servidor',
+            type: 'success'
+          })
+          app.picture = true
           app.image = resp.data.path
           app.form2.search = ''
         }).catch(function (error) {
@@ -105,15 +124,23 @@ export default {
         })
     },
     storeImage () {
-      let img = this.file
+      let app = this
+      let img = app.file
       let fd = new FormData()
 
       fd.append('image', img)
-      fd.append('name', this.form3.name)
+      fd.append('name', app.form3.name)
 
-      axios.post('http://localhost/TallerDistribuido/public/api/v1/image/insert', fd)
+      axios.post('http://tallersd.test/api/v1/image/insert', fd)
         .then(function (resp) {
-          alert(resp.data)
+          app.$notify({
+            group: 'foo',
+            title: 'Alerta',
+            text: resp.data,
+            type: 'success'
+          })
+          app.form3.name = ''
+          app.file = ''
         }).catch(function (error) {
           console.log('an error occured ' + error)
         })
